@@ -1,0 +1,18 @@
+userpanel {
+    // set position to bottom right of screen
+    position: absolute;
+    bottom: 0;
+    right: 25px;
+    width: 25%;
+    height: 100px;
+    background-color: white;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.health_panel {
+    background-color: red;
+}
