@@ -9,7 +9,7 @@
   "ResourcePaths": [],
   "HasCode": true,
   "CodePath": "/code/",
-  "RootNamespace": null,
+  "RootNamespace": "fRP",
   "Metadata": {
     "MaxPlayers": 64,
     "MinPlayers": 1,
