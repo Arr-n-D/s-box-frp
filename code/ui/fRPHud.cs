@@ -1,6 +1,5 @@
 using Sandbox;
 using Sandbox.UI;
-using fRP.UI;
 
 [Library]
 public partial class fRPHud : HudEntity<RootPanel>
@@ -17,6 +16,6 @@ public partial class fRPHud : HudEntity<RootPanel>
 		RootPanel.AddChild<VoiceSpeaker>();
 		RootPanel.AddChild<Scoreboard<ScoreboardEntry>>();
 		RootPanel.AddChild<Crosshair>();
-		RootPanel.AddChild<UserPanel>();
+		// RootPanel.AddChild<UserPanel>();
 	}
 }

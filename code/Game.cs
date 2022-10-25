@@ -1,8 +1,4 @@
 ﻿using Sandbox;
-using Sandbox.UI.Construct;
-using System;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 //
@@ -23,9 +19,11 @@ public partial class frpGame : Game
 	{
 		if ( IsServer )
 		{
-			Log.Info( "My Gamemode has been created!" );
+			DownloadAsset("gvar.citizen_zombie");
 			_ = new fRPHud();
+			
 		}
+		
 	}
 
 	/// <summary>
@@ -39,4 +37,20 @@ public partial class frpGame : Game
 
 		cl.Pawn = player;
 	}
+
+	static async Task DownloadAsset( string packageName)
+	{
+        var package = await Package.Fetch( packageName, false );
+        if ( package == null || package.PackageType != Package.Type.Model || package.Revision == null )
+        {
+            // spawn error particles
+            return;
+        }
+
+        var model = package.GetMeta( "PrimaryAsset", "models/dev/error.vmdl" );
+        // downloads if not downloads, mounts if not mounted
+        await package.MountAsync();
+
+		Precache.Add( model );
+    }
 }
