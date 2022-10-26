@@ -1,5 +1,6 @@
 ﻿using Sandbox;
 using System.Threading.Tasks;
+using fRP.Networking;
 
 //
 // You don't need to put things in a namespace, but it doesn't hurt.
@@ -15,10 +16,13 @@ namespace fRP;
 /// </summary>
 public partial class frpGame : Game
 {
+	private readonly WebSocketClient wsClient;
 	public frpGame()
 	{
 		if ( IsServer )
 		{
+			wsClient = new( "ws://127.0.0.1:8080" );
+			wsClient.InitializeConnection();
 			DownloadAsset("gvar.citizen_zombie");
 			_ = new fRPHud();
 			
