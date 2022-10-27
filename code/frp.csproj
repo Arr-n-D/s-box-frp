@@ -30,7 +30,7 @@
   <PropertyGroup>
 	<OutputPath>..\..\..\Program Files (x86)\Steam\steamapps\common\sbox/.vs/output/</OutputPath>
 	<DocumentationFile>..\..\..\Program Files (x86)\Steam\steamapps\common\sbox/.vs/output/frp.xml</DocumentationFile>
-	<RootNamespace>Sandbox</RootNamespace>
+	<RootNamespace>fRP</RootNamespace>
 	<Nullable>disable</Nullable>
   </PropertyGroup>
 

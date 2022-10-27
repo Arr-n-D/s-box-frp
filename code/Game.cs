@@ -1,8 +1,12 @@
 ﻿using Sandbox;
 using System.Threading.Tasks;
 using fRP.Networking;
-
+using System.Collections.Concurrent;
+using fRP.Networking.Interfaces;
+using System.Threading;
+using System;
 //
+using System.Text.Json;
 // You don't need to put things in a namespace, but it doesn't hurt.
 //
 namespace fRP;
@@ -17,17 +21,50 @@ namespace fRP;
 public partial class frpGame : Game
 {
 	private readonly WebSocketClient wsClient;
+	 private Thread outboundThread;
+	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new ConcurrentQueue<IOutMessage>();
+	// private readonly ConcurrentQueue<IInMessage> incomingMessageQueue = new ConcurrentQueue<IInMessage>();
 	public frpGame()
 	{
 		if ( IsServer )
 		{
 			wsClient = new( "ws://127.0.0.1:6001" );
 			wsClient.InitializeConnection();
+			InitializeOutboundThread();
 			DownloadAsset("gvar.citizen_zombie");
+			
 			_ = new fRPHud();
 			
 		}
 		
+	}
+
+	private void InitializeOutboundThread()
+	{
+		try
+            {
+                outboundThread = new Thread(new ThreadStart(ListenForOutboundMessages))
+                {
+                    IsBackground = true
+                };
+                outboundThread.Start();
+            }
+            catch (Exception e)
+            {
+                // Debug.LogException(e);
+            }
+	}
+
+	private async void ListenForOutboundMessages()
+	{
+		while (true)
+		{
+			if (outgoingMessageQueue.TryDequeue(out IOutMessage message))
+			{
+				string jsonMessage = JsonSerializer.Serialize( message );
+				await wsClient.Send(jsonMessage);
+			}
+		}
 	}
 
 	/// <summary>
