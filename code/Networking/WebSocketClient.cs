@@ -94,11 +94,14 @@ namespace fRP.Networking
 		}
 
 		public async void InitializeConnection()
-		{
+		{	
+			Log.Info( "Connecting to WebSocket Server..." );
 			bool connected = await this.Connect();
 			if ( connected )
 			{
 				Log.Info( "Successfully connected to the WebSocket Server" );
+			} else {
+				Log.Info( "Failed to connect to the WebSocket Server" );
 			}
 
 			Log.Info( $"{Host.Name}: We are connected." );

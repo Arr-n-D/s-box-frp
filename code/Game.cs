@@ -21,7 +21,7 @@ public partial class frpGame : Game
 	{
 		if ( IsServer )
 		{
-			wsClient = new( "ws://127.0.0.1:8080" );
+			wsClient = new( "ws://127.0.0.1:6001" );
 			wsClient.InitializeConnection();
 			DownloadAsset("gvar.citizen_zombie");
 			_ = new fRPHud();
