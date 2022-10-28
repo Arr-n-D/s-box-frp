@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using fRP.Networking;
 using System.Collections.Concurrent;
 using fRP.Networking.Interfaces;
-using System.Threading;
 using System;
 using System.Text.Json;
 using fRP.Networking.Packets;
@@ -21,16 +20,25 @@ namespace fRP;
 public partial class frpGame : Game
 {
 	private readonly WebSocketClient wsClient;
-	 private Thread outboundThread;
+
+	public static frpGame fRPCurrent { get; protected set; }
+	private  bool outboundThreadStarted = false;
 	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new ConcurrentQueue<IOutMessage>();
 	// private readonly ConcurrentQueue<IInMessage> incomingMessageQueue = new ConcurrentQueue<IInMessage>();
 	public frpGame()
 	{
+		fRPCurrent = this;
 		if ( IsServer )
 		{
+			InitializeOutboundThread();
+
+			// while ( !outboundThreadStarted )
+			// {
+			// 	Wait.Sleep( 100 );
+			// }
+
 			wsClient = new( "ws://127.0.0.1:6001" );
 			wsClient.InitializeConnection();
-			InitializeOutboundThread();
 			DownloadAsset("gvar.citizen_zombie");
 			
 			_ = new fRPHud();
@@ -39,21 +47,22 @@ public partial class frpGame : Game
 		
 	}
 
-	 public void SendMessage(IOutMessage message)
-        {
-            // var type = message.GetType();
-            outgoingMessageQueue.Enqueue(message);
-        }
+	public void SendMessage(IOutMessage message)
+	{
+		outgoingMessageQueue.Enqueue(message);
+	}
 
 	private void InitializeOutboundThread()
 	{
 		try
             {
-                outboundThread = new Thread(new ThreadStart(ListenForOutboundMessages))
-                {
-                    IsBackground = true
-                };
-                outboundThread.Start();
+				GameTask.RunInThreadAsync(ListenForOutboundMessages);
+				outboundThreadStarted = true;
+                // outboundThread = new Thread(new ThreadStart(ListenForOutboundMessages))
+                // {
+                //     IsBackground = true
+                // };
+                // outboundThread.Start();
             }
             catch (Exception e)
             {
@@ -66,6 +75,10 @@ public partial class frpGame : Game
 		 if (outgoingMessageQueue.TryDequeue(out IOutMessage message))
             {
                 var type = message.GetType();
+				Log.Info($"Sending message of type {type}");
+				// var json = JsonSerializer.Serialize(message);
+				// await wsClient.Send(json);
+			// }
 				// string jsonMessage = JsonSerializer.Serialize( message );
                 var nMessage = JsonSerializer.Serialize(new Packet
                 {

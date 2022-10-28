@@ -2,6 +2,7 @@ using Sandbox;
 using System.Text.Json;
 using System.Threading.Tasks;
 using fRP.Networking.Interfaces;
+using fRP.Networking.Packets;
 namespace fRP.Networking
 {
 	/// <summary>
@@ -106,8 +107,11 @@ namespace fRP.Networking
 			Log.Info( $"{Host.Name}: We are connected." );
 
 			// Attempt to authenticate to WS Server.
-			OutgoingMessage message = new();
-			message.MessageType = 0;
+
+			frpGame.fRPCurrent.SendMessage(new AuthenticationPacket
+            {
+                Token = "test"
+            });
 
 			// if ( Game.Current.IsServer )
 			// {
