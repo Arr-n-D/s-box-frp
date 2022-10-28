@@ -1,7 +1,7 @@
 using Sandbox;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using fRP.Networking.Interfaces;
 namespace fRP.Networking
 {
 	/// <summary>
@@ -54,10 +54,9 @@ namespace fRP.Networking
 		/// Sends a message to the WebSocket Server.
 		/// </summary>
 		/// <param name="message">The message to be sent.</param>
-		public async Task Send( OutgoingMessage message )
+		public async Task Send( string message )
 		{
-			string jsonMessage = JsonSerializer.Serialize( message );
-			await ws.Send( jsonMessage );
+			await ws.Send( message );
 		}
 
 		/// <summary>
@@ -110,20 +109,20 @@ namespace fRP.Networking
 			OutgoingMessage message = new();
 			message.MessageType = 0;
 
-			if ( Game.Current.IsServer )
-			{
-				message.ServerId = "dev_server";
-				message.IsServer = true;
-			}
-			else
-			{
-				message.PlayerId = Local.PlayerId.ToString();
-				message.PlayerName = Local.DisplayName;
-			}
+			// if ( Game.Current.IsServer )
+			// {
+			// 	message.ServerId = "dev_server";
+			// 	message.IsServer = true;
+			// }
+			// else
+			// {
+			// 	message.PlayerId = Local.PlayerId.ToString();
+			// 	message.PlayerName = Local.DisplayName;
+			// }
 
-			// message.Token = TokenManager.GetToken();
+			// // message.Token = TokenManager.GetToken();
 
-			await this.Send( message );
+			// await this.Send( message );
 		}
 	}
 	

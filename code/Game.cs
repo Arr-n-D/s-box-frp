@@ -5,8 +5,8 @@ using System.Collections.Concurrent;
 using fRP.Networking.Interfaces;
 using System.Threading;
 using System;
-//
 using System.Text.Json;
+using fRP.Networking.Packets;
 // You don't need to put things in a namespace, but it doesn't hurt.
 //
 namespace fRP;
@@ -39,6 +39,12 @@ public partial class frpGame : Game
 		
 	}
 
+	 public void SendMessage(IOutMessage message)
+        {
+            // var type = message.GetType();
+            outgoingMessageQueue.Enqueue(message);
+        }
+
 	private void InitializeOutboundThread()
 	{
 		try
@@ -57,14 +63,18 @@ public partial class frpGame : Game
 
 	private async void ListenForOutboundMessages()
 	{
-		while (true)
-		{
-			if (outgoingMessageQueue.TryDequeue(out IOutMessage message))
-			{
-				string jsonMessage = JsonSerializer.Serialize( message );
-				await wsClient.Send(jsonMessage);
-			}
-		}
+		 if (outgoingMessageQueue.TryDequeue(out IOutMessage message))
+            {
+                var type = message.GetType();
+				// string jsonMessage = JsonSerializer.Serialize( message );
+                var nMessage = JsonSerializer.Serialize(new Packet
+                {
+                    ID = Mappings.TypeToId[type],
+                    Content = JsonSerializer.SerializeToUtf8Bytes(message)
+                });
+
+				await wsClient.Send(nMessage);
+            }
 	}
 
 	/// <summary>
