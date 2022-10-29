@@ -1,11 +1,11 @@
 using System.IO.Enumeration;
 using fRP.Networking.Interfaces;
 using System.Text.Json.Serialization;
-namespace fRP.Networking.Packets
+namespace fRP.Networking.Packets.Outbound
 {
-    public class AuthenticationPacket : IOutMessage
+    public struct AuthenticationPacket : IOutMessage
     {
-        [JsonPropertyName( "X-Auth-Token" )]
+        [JsonPropertyName( "Token" )]
 		public string Token { get; set; }
     }   
 }

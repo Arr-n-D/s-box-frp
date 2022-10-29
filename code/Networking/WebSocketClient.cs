@@ -11,7 +11,7 @@ namespace fRP.Networking
 	public class WebSocketClient
 	{
 		/// Declare our WebSocket object.
-		private readonly WebSocket ws;
+		public readonly WebSocket ws;
 
 		/// Declare our connection string.
 		private readonly string connectionString;
@@ -30,6 +30,7 @@ namespace fRP.Networking
 			ws.OnMessageReceived += OnMessageReceived;
 			ws.OnDisconnected += OnDisconnected;
 		}
+		
 
 		/// <summary>
 		/// Connect to the WebSocket Server.
@@ -93,7 +94,7 @@ namespace fRP.Networking
 			Log.Info( $"Disconnected from WebSocket Server with exit code {status} and reason {reason}." );
 		}
 
-		public async void InitializeConnection()
+		public async Task InitializeConnection()
 		{	
 			Log.Info( "Connecting to WebSocket Server..." );
 			bool connected = await this.Connect();
@@ -105,28 +106,7 @@ namespace fRP.Networking
 			}
 
 			Log.Info( $"{Host.Name}: We are connected." );
-
-			// Attempt to authenticate to WS Server.
-
-			frpGame.fRPCurrent.SendMessage(new AuthenticationPacket
-            {
-                Token = "test"
-            });
-
-			// if ( Game.Current.IsServer )
-			// {
-			// 	message.ServerId = "dev_server";
-			// 	message.IsServer = true;
-			// }
-			// else
-			// {
-			// 	message.PlayerId = Local.PlayerId.ToString();
-			// 	message.PlayerName = Local.DisplayName;
-			// }
-
-			// // message.Token = TokenManager.GetToken();
-
-			// await this.Send( message );
+			
 		}
 	}
 	

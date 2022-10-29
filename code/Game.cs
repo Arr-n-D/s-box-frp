@@ -6,6 +6,7 @@ using fRP.Networking.Interfaces;
 using System;
 using System.Text.Json;
 using fRP.Networking.Packets;
+using fRP.Networking.Packets.Outbound;
 // You don't need to put things in a namespace, but it doesn't hurt.
 //
 namespace fRP;
@@ -22,72 +23,69 @@ public partial class frpGame : Game
 	private readonly WebSocketClient wsClient;
 
 	public static frpGame fRPCurrent { get; protected set; }
-	private  bool outboundThreadStarted = false;
-	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new ConcurrentQueue<IOutMessage>();
-	// private readonly ConcurrentQueue<IInMessage> incomingMessageQueue = new ConcurrentQueue<IInMessage>();
+	private bool outboundThreadStarted = false;
+	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new();
 	public frpGame()
 	{
 		fRPCurrent = this;
 		if ( IsServer )
 		{
-			InitializeOutboundThread();
-
-			// while ( !outboundThreadStarted )
-			// {
-			// 	Wait.Sleep( 100 );
-			// }
-
 			wsClient = new( "ws://127.0.0.1:6001" );
-			wsClient.InitializeConnection();
-			DownloadAsset("gvar.citizen_zombie");
-			
+			// wsClient.InitializeConnection();
+			GameTask.RunInThreadAsync( ListenForData );
+			DownloadAsset( "gvar.citizen_zombie" );
+
 			_ = new fRPHud();
-			
+
 		}
-		
+
 	}
 
-	public void SendMessage(IOutMessage message)
-	{
-		outgoingMessageQueue.Enqueue(message);
-	}
-
-	private void InitializeOutboundThread()
+	private async void ListenForData()
 	{
 		try
-            {
-				GameTask.RunInThreadAsync(ListenForOutboundMessages);
-				outboundThreadStarted = true;
-                // outboundThread = new Thread(new ThreadStart(ListenForOutboundMessages))
-                // {
-                //     IsBackground = true
-                // };
-                // outboundThread.Start();
-            }
-            catch (Exception e)
-            {
-                // Debug.LogException(e);
-            }
+		{
+			await wsClient.InitializeConnection();
+			while ( wsClient.ws.IsConnected )
+			{
+				HandleWrites();
+				await GameTask.Yield();
+			}
+			Log.Error( "Disconnected" );
+		}
+		catch ( Exception e )
+		{
+			Log.Error( e );
+		}
+		finally
+		{
+			wsClient.ws?.Dispose();
+		}
 	}
 
-	private async void ListenForOutboundMessages()
+	public void SendMessage( IOutMessage message )
 	{
-		 if (outgoingMessageQueue.TryDequeue(out IOutMessage message))
-            {
-                var type = message.GetType();
-				Log.Info($"Sending message of type {type}");
-				// var json = JsonSerializer.Serialize(message);
-				// await wsClient.Send(json);
-			// }
-				// string jsonMessage = JsonSerializer.Serialize( message );
-                var nMessage = JsonSerializer.Serialize(new Packet
-                {
-                    ID = Mappings.TypeToId[type],
-                    Content = JsonSerializer.SerializeToUtf8Bytes(message)
-                });
+		outgoingMessageQueue.Enqueue( message );
+	}
 
-				await wsClient.Send(nMessage);
-            }
+
+	private async void HandleWrites()
+	{
+		if ( outgoingMessageQueue.TryDequeue( out IOutMessage message ) )
+		{
+			var type = message.GetType();
+		
+			string nMessage = JsonSerializer.Serialize( new Packet
+			{
+				ID = Mappings.TypeToId[type],
+				Content = JsonSerializer.Serialize( message, type )
+			} );
+
+			// Log.Info( message  );
+			
+			await wsClient.Send( nMessage );
+		}
+
 	}
 
 	/// <summary>
@@ -98,23 +96,27 @@ public partial class frpGame : Game
 		base.ClientJoined( cl );
 		var player = new Player( cl );
 		player.Respawn();
+		this.SendMessage( new AuthenticationPacket
+		{
+			Token = "format"
+		} );
 
 		cl.Pawn = player;
 	}
 
-	static async Task DownloadAsset( string packageName)
+	static async Task DownloadAsset( string packageName )
 	{
-        var package = await Package.Fetch( packageName, false );
-        if ( package == null || package.PackageType != Package.Type.Model || package.Revision == null )
-        {
-            // spawn error particles
-            return;
-        }
+		var package = await Package.Fetch( packageName, false );
+		if ( package == null || package.PackageType != Package.Type.Model || package.Revision == null )
+		{
+			// spawn error particles
+			return;
+		}
 
-        var model = package.GetMeta( "PrimaryAsset", "models/dev/error.vmdl" );
-        // downloads if not downloads, mounts if not mounted
-        await package.MountAsync();
+		var model = package.GetMeta( "PrimaryAsset", "models/dev/error.vmdl" );
+		// downloads if not downloads, mounts if not mounted
+		await package.MountAsync();
 
 		Precache.Add( model );
-    }
+	}
 }
