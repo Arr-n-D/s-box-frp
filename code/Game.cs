@@ -21,20 +21,19 @@ namespace fRP;
 /// </summary>
 public partial class frpGame : Game
 {
-	private readonly WebSocketClient wsClient;
 
-	private static uint MessageIdAccumulator;
-
+	public DataHandler DataHandler { get; set; }
 	public static frpGame fRPCurrent { get; protected set; }
 	// private bool outboundThreadStarted = false;
-	private readonly ConcurrentQueue<string> outgoingMessageQueue = new();
+
 	public frpGame()
 	{
 		fRPCurrent = this;
 		if ( IsServer )
 		{
-			wsClient = new( "ws://127.0.0.1:6001" );
-			GameTask.RunInThreadAsync( ListenForData );
+			DataHandler = new DataHandler();
+
+			GameTask.RunInThreadAsync( DataHandler.ListenForData );
 			DownloadAssets();
 
 			// _ = new fRPHud();
@@ -47,53 +46,7 @@ public partial class frpGame : Game
 		DownloadAsset( "gvar.citizen_zombie" );
 	}
 
-	private async void ListenForData()
-	{
-		try
-		{
-			await wsClient.InitializeConnection();
-			while ( wsClient.ws.IsConnected )
-			{
-				HandleWrites();
-				await GameTask.Yield();
-			}
-			Log.Error( "Disconnected" );
-		}
-		catch ( Exception e )
-		{
-			Log.Error( e );
-		}
-		finally
-		{
-			wsClient.ws?.Dispose();
-		}
-	}
 
-	public uint SendMessage( IOutMessage message )
-	{
-		var type = message.GetType();
-
-		string nMessage = JsonSerializer.Serialize( new Packet
-		{
-			ID = Mappings.TypeToId[type],
-			Content = JsonSerializer.Serialize( message, type ),
-			MessageID = ++MessageIdAccumulator
-		} );
-
-		outgoingMessageQueue.Enqueue( nMessage );
-
-		return MessageIdAccumulator;
-	}
-
-
-	private async void HandleWrites()
-	{
-		if ( outgoingMessageQueue.TryDequeue( out string message ) )
-		{
-			await wsClient.Send( message );
-		}
-
-	}
 
 	/// <summary>
 	/// A client has joined the server. Make them a pawn to play with
@@ -103,19 +56,12 @@ public partial class frpGame : Game
 		base.ClientJoined( cl );
 		var player = new Player( cl );
 		player.Respawn();
+		var msg = new PlayerInitialSpawnPacket { SteamId = cl.PlayerId.ToString() };
 
-		uint msgId = this.SendMessage( new PlayerInitialSpawnPacket
-		{
-			SteamId = cl.PlayerId.ToString()
-		} );
-
-		Log.Info(msgId);
-		var response = wsClient.WaitForResponse( msgId ).GetAwaiter().GetResult();
-
+		var response = this.DataHandler.SendAndRetryMessage(msg);
 		if ( response == null )
 		{
-			Log.Error( $"WebSocket response failed:" );
-			// return default;
+			Log.Info( "Failed after 3 tries" );
 		}
 
 		Log.Info( response.Content );
