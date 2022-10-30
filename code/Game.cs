@@ -7,6 +7,7 @@ using System;
 using System.Text.Json;
 using fRP.Networking.Packets;
 using fRP.Networking.Packets.Outbound;
+using Sandbox.Internal;
 // You don't need to put things in a namespace, but it doesn't hurt.
 //
 namespace fRP;
@@ -23,7 +24,7 @@ public partial class frpGame : Game
 	private readonly WebSocketClient wsClient;
 
 	public static frpGame fRPCurrent { get; protected set; }
-	private bool outboundThreadStarted = false;
+	// private bool outboundThreadStarted = false;
 	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new();
 	public frpGame()
 	{
@@ -33,12 +34,25 @@ public partial class frpGame : Game
 			wsClient = new( "ws://127.0.0.1:6001" );
 			// wsClient.InitializeConnection();
 			GameTask.RunInThreadAsync( ListenForData );
-			DownloadAsset( "gvar.citizen_zombie" );
+			DownloadAssets();
 
 			_ = new fRPHud();
 
 		}
+	}
 
+	[Event( "client.connected" )]
+	public void MyCallback()
+	{
+		if ( IsServer )
+		{
+			Log.Info( "Client connected" );
+		}
+	}
+
+	private void DownloadAssets()
+	{
+		DownloadAsset( "gvar.citizen_zombie" );
 	}
 
 	private async void ListenForData()
@@ -74,15 +88,16 @@ public partial class frpGame : Game
 		if ( outgoingMessageQueue.TryDequeue( out IOutMessage message ) )
 		{
 			var type = message.GetType();
-		
+
 			string nMessage = JsonSerializer.Serialize( new Packet
 			{
 				ID = Mappings.TypeToId[type],
-				Content = JsonSerializer.Serialize( message, type )
+				Content = JsonSerializer.Serialize( message, type ),
+				MessageID = wsClient.GetNextMessageId()
 			} );
 
 			// Log.Info( message  );
-			
+
 			await wsClient.Send( nMessage );
 		}
 
@@ -96,9 +111,9 @@ public partial class frpGame : Game
 		base.ClientJoined( cl );
 		var player = new Player( cl );
 		player.Respawn();
-		this.SendMessage( new AuthenticationPacket
+		this.SendMessage( new PlayerInitialSpawnPacket
 		{
-			Token = "format"
+			SteamId = cl.PlayerId.ToString()
 		} );
 
 		cl.Pawn = player;

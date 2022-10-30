@@ -7,6 +7,8 @@ namespace fRP
 		private TimeSince timeSinceDropped;
 		private TimeSince timeSinceJumpReleased;
 
+		// private BaseInventory inventory;
+
 
 		public ClothingContainer Clothing = new();
 		public override void Respawn()

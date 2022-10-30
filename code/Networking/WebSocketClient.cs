@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using fRP.Networking.Interfaces;
 using fRP.Networking.Packets;
+using System.Collections.Generic;
 namespace fRP.Networking
 {
 	/// <summary>
@@ -15,6 +16,9 @@ namespace fRP.Networking
 
 		/// Declare our connection string.
 		private readonly string connectionString;
+
+		private static uint MessageIdAccumulator;
+		private static List<Packet> Responses = new();
 
 		/// <summary>
 		/// Constructor for our WebSocketClient.
@@ -30,7 +34,7 @@ namespace fRP.Networking
 			ws.OnMessageReceived += OnMessageReceived;
 			ws.OnDisconnected += OnDisconnected;
 		}
-		
+
 
 		/// <summary>
 		/// Connect to the WebSocket Server.
@@ -69,20 +73,16 @@ namespace fRP.Networking
 		/// </param>
 		private void OnMessageReceived( string jsonMessage )
 		{
-			IncomingMessage message = JsonSerializer.Deserialize<IncomingMessage>( jsonMessage );
-
-			// // Token
-			// if ( message.MessageType == 0 )
-			// {
-			// 	TokenWrapper token = new();
-			// 	token.Token = message.Text;
-			// 	TokenManager.SaveToken( token );
-			// }
-			// Results of an information query
-			// else if ( message.MessageType == 1 )
-			// {
-				Log.Info( message.Data );
-			// }
+			try
+			{
+				var msg = JsonSerializer.Deserialize<Packet>( jsonMessage );
+				msg.TimeSinceReceived = 0;
+				Responses.Add( msg );
+			}
+			catch ( System.Exception e )
+			{
+				Log.Warning( e.Message );
+			}
 
 		}
 
@@ -95,19 +95,26 @@ namespace fRP.Networking
 		}
 
 		public async Task InitializeConnection()
-		{	
+		{
 			Log.Info( "Connecting to WebSocket Server..." );
 			bool connected = await this.Connect();
 			if ( connected )
 			{
 				Log.Info( "Successfully connected to the WebSocket Server" );
-			} else {
+			}
+			else
+			{
 				Log.Info( "Failed to connect to the WebSocket Server" );
 			}
 
 			Log.Info( $"{Host.Name}: We are connected." );
-			
+
+		}
+
+		public uint GetNextMessageId()
+		{
+			return ++MessageIdAccumulator;
 		}
 	}
-	
+
 }

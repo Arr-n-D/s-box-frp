@@ -10,5 +10,10 @@ namespace fRP.Networking.Packets
 
         [JsonPropertyName( "Content" )]
         public string Content { get; set; }
+
+        [JsonPropertyName( "MessageID" )]
+        public uint MessageID { get; set; }
+
+        public float TimeSinceReceived { get; set; }
     }
 }
