@@ -18,7 +18,7 @@ namespace fRP.Networking
 		/// Declare our connection string.
 		private readonly string connectionString;
 
-		
+
 		private static List<Packet> Responses = new();
 
 		/// <summary>
@@ -77,13 +77,25 @@ namespace fRP.Networking
 			try
 			{
 				var msg = JsonSerializer.Deserialize<Packet>( jsonMessage );
-				Log.Info( $"Received message: {msg.Content}" );
 				msg.TimeSinceReceived = 0;
 				Responses.Add( msg );
 			}
 			catch ( System.Exception e )
 			{
 				Log.Warning( e.Message );
+			}
+
+		}
+
+		[Event.Tick]
+		public static void OnTick()
+		{
+			for ( int i = Responses.Count - 1; i >= 0; i-- )
+			{
+				if ( (Responses[i]?.TimeSinceReceived ?? 0) > 7f )
+				{
+					Responses.RemoveAt( i );
+				}
 			}
 
 		}
@@ -114,22 +126,17 @@ namespace fRP.Networking
 		}
 
 		public async Task<Packet> WaitForResponse( uint messageid, float timeout = 7f )
-	{
-		RealTimeUntil tu = timeout;
-		while( tu > 0 )
 		{
-			var response = Responses.FirstOrDefault( x => x.MessageID == messageid );
-			if ( response != null ) return response;
+			RealTimeUntil tu = timeout;
+			while ( tu > 0 )
+			{
+				var response = Responses.FirstOrDefault( x => x.MessageID == messageid );
+				if ( response != null ) return response;
 
-			await Task.Delay( 100 );
+				await Task.Delay( 100 );
+			}
+			return null;
 		}
-		return null;
-	}
 
-		// public uint GetNextMessageId()
-		// {
-		// 	return ++MessageIdAccumulator;
-		// }
 	}
-
 }

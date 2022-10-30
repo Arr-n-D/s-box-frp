@@ -34,11 +34,10 @@ public partial class frpGame : Game
 		if ( IsServer )
 		{
 			wsClient = new( "ws://127.0.0.1:6001" );
-			// wsClient.InitializeConnection();
 			GameTask.RunInThreadAsync( ListenForData );
 			DownloadAssets();
 
-			_ = new fRPHud();
+			// _ = new fRPHud();
 
 		}
 	}
@@ -104,11 +103,13 @@ public partial class frpGame : Game
 		base.ClientJoined( cl );
 		var player = new Player( cl );
 		player.Respawn();
+
 		uint msgId = this.SendMessage( new PlayerInitialSpawnPacket
 		{
 			SteamId = cl.PlayerId.ToString()
 		} );
 
+		Log.Info(msgId);
 		var response = wsClient.WaitForResponse( msgId ).GetAwaiter().GetResult();
 
 		if ( response == null )
