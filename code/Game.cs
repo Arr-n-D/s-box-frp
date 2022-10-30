@@ -27,7 +27,7 @@ public partial class frpGame : Game
 
 	public static frpGame fRPCurrent { get; protected set; }
 	// private bool outboundThreadStarted = false;
-	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new();
+	private readonly ConcurrentQueue<string> outgoingMessageQueue = new();
 	public frpGame()
 	{
 		fRPCurrent = this;
@@ -40,15 +40,6 @@ public partial class frpGame : Game
 
 			_ = new fRPHud();
 
-		}
-	}
-
-	[Event( "client.connected" )]
-	public void MyCallback()
-	{
-		if ( IsServer )
-		{
-			Log.Info( "Client connected" );
 		}
 	}
 
@@ -79,28 +70,28 @@ public partial class frpGame : Game
 		}
 	}
 
-	public void SendMessage( IOutMessage message )
+	public uint SendMessage( IOutMessage message )
 	{
-		outgoingMessageQueue.Enqueue( message );
+		var type = message.GetType();
+
+		string nMessage = JsonSerializer.Serialize( new Packet
+		{
+			ID = Mappings.TypeToId[type],
+			Content = JsonSerializer.Serialize( message, type ),
+			MessageID = ++MessageIdAccumulator
+		} );
+
+		outgoingMessageQueue.Enqueue( nMessage );
+
+		return MessageIdAccumulator;
 	}
 
 
 	private async void HandleWrites()
 	{
-		if ( outgoingMessageQueue.TryDequeue( out IOutMessage message ) )
+		if ( outgoingMessageQueue.TryDequeue( out string message ) )
 		{
-			var type = message.GetType();
-
-			string nMessage = JsonSerializer.Serialize( new Packet
-			{
-				ID = Mappings.TypeToId[type],
-				Content = JsonSerializer.Serialize( message, type ),
-				MessageID = ++MessageIdAccumulator
-			} );
-
-			// Log.Info( message  );
-
-			await wsClient.Send( nMessage );
+			await wsClient.Send( message );
 		}
 
 	}
@@ -113,23 +104,20 @@ public partial class frpGame : Game
 		base.ClientJoined( cl );
 		var player = new Player( cl );
 		player.Respawn();
-		this.SendMessage( new PlayerInitialSpawnPacket
+		uint msgId = this.SendMessage( new PlayerInitialSpawnPacket
 		{
 			SteamId = cl.PlayerId.ToString()
 		} );
 
-		var response = await WaitForResponse( msg.Id );
+		var response = wsClient.WaitForResponse( msgId ).GetAwaiter().GetResult();
 
-		if( response == null )
+		if ( response == null )
 		{
 			Log.Error( $"WebSocket response failed:" );
-			return default;
+			// return default;
 		}
 
-		try
-		{
-			return JsonSerializer.Deserialize<Packet>( response.Message, JsonOptions );
-		}
+		Log.Info( response.Content );
 
 		cl.Pawn = player;
 	}

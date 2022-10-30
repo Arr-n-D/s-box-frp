@@ -4,7 +4,7 @@ using Sandbox;
 
 namespace fRP.Networking.Packets
 {
-	public struct Packet : IOutMessage, IInMessage
+	public class Packet : IOutMessage, IInMessage
 	{
 		[JsonPropertyName( "ID" )]
 		public ushort ID { get; set; }
@@ -15,6 +15,6 @@ namespace fRP.Networking.Packets
 		[JsonPropertyName( "MessageID" )]
 		public uint MessageID { get; set; }
 
-		public TimeSince TimeSinceReceived { get; set; }
+		public TimeSince TimeSinceReceived;
 	}
 }

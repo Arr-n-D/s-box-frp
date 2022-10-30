@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using fRP.Networking.Interfaces;
 using fRP.Networking.Packets;
 using System.Collections.Generic;
+using System.Linq;
 namespace fRP.Networking
 {
 	/// <summary>
@@ -111,6 +112,19 @@ namespace fRP.Networking
 			Log.Info( $"{Host.Name}: We are connected." );
 
 		}
+
+		public async Task<Packet> WaitForResponse( uint messageid, float timeout = 7f )
+	{
+		RealTimeUntil tu = timeout;
+		while( tu > 0 )
+		{
+			var response = Responses.FirstOrDefault( x => x.MessageID == messageid );
+			if ( response != null ) return response;
+
+			await Task.Delay( 100 );
+		}
+		return null;
+	}
 
 		// public uint GetNextMessageId()
 		// {
