@@ -23,6 +23,8 @@ public partial class frpGame : Game
 {
 	private readonly WebSocketClient wsClient;
 
+	private static uint MessageIdAccumulator;
+
 	public static frpGame fRPCurrent { get; protected set; }
 	// private bool outboundThreadStarted = false;
 	private readonly ConcurrentQueue<IOutMessage> outgoingMessageQueue = new();
@@ -93,7 +95,7 @@ public partial class frpGame : Game
 			{
 				ID = Mappings.TypeToId[type],
 				Content = JsonSerializer.Serialize( message, type ),
-				MessageID = wsClient.GetNextMessageId()
+				MessageID = ++MessageIdAccumulator
 			} );
 
 			// Log.Info( message  );
@@ -115,6 +117,19 @@ public partial class frpGame : Game
 		{
 			SteamId = cl.PlayerId.ToString()
 		} );
+
+		var response = await WaitForResponse( msg.Id );
+
+		if( response == null )
+		{
+			Log.Error( $"WebSocket response failed:" );
+			return default;
+		}
+
+		try
+		{
+			return JsonSerializer.Deserialize<Packet>( response.Message, JsonOptions );
+		}
 
 		cl.Pawn = player;
 	}

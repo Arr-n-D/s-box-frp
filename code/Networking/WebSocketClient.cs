@@ -17,7 +17,7 @@ namespace fRP.Networking
 		/// Declare our connection string.
 		private readonly string connectionString;
 
-		private static uint MessageIdAccumulator;
+		
 		private static List<Packet> Responses = new();
 
 		/// <summary>
@@ -76,6 +76,7 @@ namespace fRP.Networking
 			try
 			{
 				var msg = JsonSerializer.Deserialize<Packet>( jsonMessage );
+				Log.Info( $"Received message: {msg.Content}" );
 				msg.TimeSinceReceived = 0;
 				Responses.Add( msg );
 			}
@@ -111,10 +112,10 @@ namespace fRP.Networking
 
 		}
 
-		public uint GetNextMessageId()
-		{
-			return ++MessageIdAccumulator;
-		}
+		// public uint GetNextMessageId()
+		// {
+		// 	return ++MessageIdAccumulator;
+		// }
 	}
 
 }
