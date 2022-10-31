@@ -1,7 +1,5 @@
-namespace fRP.Networking.Interfaces
+namespace fRP.Networking.Interfaces;
+public interface IInMessage
 {
-    public interface IInMessage
-    {
-        
-    }
+
 }

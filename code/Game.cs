@@ -58,7 +58,7 @@ public partial class frpGame : Game
 		player.Respawn();
 		var msg = new PlayerInitialSpawnPacket { SteamId = cl.PlayerId.ToString() };
 
-		var response = this.DataHandler.SendAndRetryMessage(msg);
+		var response = this.DataHandler.SendAndRetryMessage( msg ).GetAwaiter().GetResult();
 		if ( response == null )
 		{
 			Log.Info( "Failed after 3 tries" );
