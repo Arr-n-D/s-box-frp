@@ -58,13 +58,11 @@ public partial class frpGame : Game
 		player.Respawn();
 		var msg = new PlayerInitialSpawnPacket { SteamId = cl.PlayerId.ToString() };
 
-		var response = this.DataHandler.SendAndRetryMessage( msg ).GetAwaiter().GetResult();
+		var response = this.DataHandler.SendAndRetryMessage( msg, timeout : 1f ).GetAwaiter().GetResult();
 		if ( response == null )
 		{
 			Log.Info( "Failed after 3 tries" );
 		}
-
-		Log.Info( response.Content );
 
 		cl.Pawn = player;
 	}

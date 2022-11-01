@@ -44,12 +44,7 @@ public class DataHandler
 	{
 		var type = message.GetType();
 
-		string nMessage = JsonSerializer.Serialize( new Packet
-		{
-			ID = Mappings.TypeToId[type],
-			Content = JsonSerializer.Serialize( message, type ),
-			MessageID = ++MessageIdAccumulator
-		} );
+		string nMessage = JsonSerializer.Serialize( new Packet( Mappings.TypeToId[type], JsonSerializer.Serialize( message, type ), ++MessageIdAccumulator ) );
 
 		outgoingMessageQueue.Enqueue( nMessage );
 
@@ -66,12 +61,12 @@ public class DataHandler
 		}
 	}
 
-	public async Task<Packet> SendAndRetryMessage<T>( T message, int retries = 3 ) where T : IOutMessage
+	public async Task<Packet> SendAndRetryMessage<T>( T message, int retries = 3, float timeout = 2f ) where T : IOutMessage
 	{
 		for ( var i = 0; i < retries; i++ )
 		{
 			var id = QueueMessage( message );
-			var response = await this.wsClient.WaitForResponse( id );
+			var response = await this.wsClient.WaitForResponse( id, timeout );
 
 			if ( response != null )
 			{

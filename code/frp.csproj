@@ -31,7 +31,7 @@
 	<OutputPath>..\..\..\Program Files (x86)\Steam\steamapps\common\sbox/.vs/output/</OutputPath>
 	<DocumentationFile>..\..\..\Program Files (x86)\Steam\steamapps\common\sbox/.vs/output/frp.xml</DocumentationFile>
 	<RootNamespace>fRP</RootNamespace>
-	<Nullable>enabled</Nullable>
+	<Nullable>disable</Nullable>
   </PropertyGroup>
 
 	<ItemGroup>

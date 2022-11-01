@@ -76,12 +76,17 @@ public class WebSocketClient
 		try
 		{
 			var msg = JsonSerializer.Deserialize<Packet>( jsonMessage );
+			// Log.Info( $"Received message: {msg}" );
 			msg.TimeSinceReceived = 0;
 			Responses.Add( msg );
 		}
 		catch ( System.Exception e )
 		{
 			Log.Warning( e.Message );
+		}
+		finally
+		{
+			Log.Info( $"Received message: {jsonMessage}" );
 		}
 
 	}
@@ -119,12 +124,9 @@ public class WebSocketClient
 		{
 			Log.Info( "Failed to connect to the WebSocket Server" );
 		}
-
-		Log.Info( $"{Host.Name}: We are connected." );
-
 	}
 
-	public async Task<Packet> WaitForResponse( uint messageid, float timeout = 7f )
+	public async Task<Packet> WaitForResponse( uint messageid, float timeout = 2f )
 	{
 		RealTimeUntil tu = timeout;
 		while ( tu > 0 )
@@ -132,8 +134,9 @@ public class WebSocketClient
 			var response = Responses.FirstOrDefault( x => x.MessageID == messageid );
 			if ( response != null ) return response;
 
-			await GameTask.Delay( 1 );
+			await GameTask.Yield();
 		}
+		
 		return null;
 	}
 
