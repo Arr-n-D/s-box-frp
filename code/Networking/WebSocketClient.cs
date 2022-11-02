@@ -76,7 +76,6 @@ public class WebSocketClient
 		try
 		{
 			var msg = JsonSerializer.Deserialize<Packet>( jsonMessage );
-			// Log.Info( $"Received message: {msg}" );
 			msg.TimeSinceReceived = 0;
 			Responses.Add( msg );
 		}
@@ -84,11 +83,6 @@ public class WebSocketClient
 		{
 			Log.Warning( e.Message );
 		}
-		finally
-		{
-			Log.Info( $"Received message: {jsonMessage}" );
-		}
-
 	}
 
 	[Event.Tick]

@@ -1,13 +1,10 @@
 ﻿using Sandbox;
 using System.Threading.Tasks;
 using fRP.Networking;
-using System.Collections.Concurrent;
-using fRP.Networking.Interfaces;
-using System;
+using fRP.Networking.Packets.Outbound;
+using fRP.Networking.Errors;
 using System.Text.Json;
 using fRP.Networking.Packets;
-using fRP.Networking.Packets.Outbound;
-using Sandbox.Internal;
 // You don't need to put things in a namespace, but it doesn't hurt.
 //
 namespace fRP;
@@ -58,10 +55,16 @@ public partial class frpGame : Game
 		player.Respawn();
 		var msg = new PlayerInitialSpawnPacket { SteamId = cl.PlayerId.ToString() };
 
-		var response = this.DataHandler.SendAndRetryMessage( msg, timeout : 1f ).GetAwaiter().GetResult();
+		var response = this.DataHandler.SendAndRetryMessage( msg, timeout: 1f ).GetAwaiter().GetResult();
 		if ( response == null )
 		{
 			Log.Info( "Failed after 3 tries" );
+		}
+
+		var error = Error.GotError( response );
+		if ( error.Item1 )
+		{
+			Log.Info( error.Item2 );
 		}
 
 		cl.Pawn = player;
