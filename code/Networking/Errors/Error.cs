@@ -21,18 +21,18 @@ public class Error : IError
 		return "Unknown error";
 	}
 
-	public Tuple<bool, string> GotError( Packet packet )
-	{
-		try
-		{
-			var error = JsonSerializer.Deserialize<Error>( packet.Content );
-			var pNotFoundError = Mappings.IdToErrorType[error.ErrorCode];
-            return true
+	// public Tuple<bool, string> GotError( Packet packet )
+	// {
+	// 	try
+	// 	{
+	// 		var error = JsonSerializer.Deserialize<Error>( packet.Content );
+	// 		var pNotFoundError = Mappings.IdToErrorType[error.ErrorCode];
+    //         return true
 
-		}
-		catch ( System.Exception e )
-		{
-			Log.Error( e );
-		}
-	}
+	// 	}
+	// 	catch ( System.Exception e )
+	// 	{
+	// 		Log.Error( e );
+	// 	}
+	// }
 }

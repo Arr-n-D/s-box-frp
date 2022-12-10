@@ -10,7 +10,6 @@
   "ResourcePaths": [],
   "HasCode": true,
   "CodePath": "/code/",
-  "RootNamespace": "fRP",
   "Metadata": {
     "MaxPlayers": 64,
     "MinPlayers": 1,
@@ -29,6 +28,7 @@
       "RootNamespace": "fRP",
       "DefineConstants": "SANDBOX;ADDON;DEBUG",
       "NoWarn": "1701;1702;1591;"
-    }
+    },
+    "DefaultLeaderboards": null
   }
 }

@@ -2,9 +2,7 @@
 using System.Threading.Tasks;
 using fRP.Networking;
 using fRP.Networking.Packets.Outbound;
-using fRP.Networking.Errors;
-using System.Text.Json;
-using fRP.Networking.Packets;
+
 // You don't need to put things in a namespace, but it doesn't hurt.
 //
 namespace fRP;
@@ -16,7 +14,7 @@ namespace fRP;
 /// You can use this to create things like HUDs and declare which player class
 /// to use for spawned players.
 /// </summary>
-public partial class frpGame : Game
+public partial class frpGame : GameManager 
 {
 
 	public DataHandler DataHandler { get; set; }
@@ -53,7 +51,7 @@ public partial class frpGame : Game
 		base.ClientJoined( cl );
 		var player = new Player( cl );
 		player.Respawn();
-		var msg = new PlayerInitialSpawnPacket { SteamId = cl.PlayerId.ToString() };
+		var msg = new PlayerInitialSpawnPacket { SteamId = cl.SteamId.ToString() };
 
 		var response = this.DataHandler.SendAndRetryMessage( msg, timeout: 1f ).GetAwaiter().GetResult();
 		if ( response == null )
@@ -61,11 +59,11 @@ public partial class frpGame : Game
 			Log.Info( "Failed after 3 tries" );
 		}
 
-		var error = Error.GotError( response );
-		if ( error.Item1 )
-		{
-			Log.Info( error.Item2 );
-		}
+		// var error = Error.GotError( response );
+		// if ( error.Item1 )
+		// {
+		// 	Log.Info( error.Item2 );
+		// }
 
 		cl.Pawn = player;
 	}
