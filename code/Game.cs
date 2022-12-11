@@ -24,7 +24,7 @@ public partial class frpGame : GameManager
 	public frpGame()
 	{
 		fRPCurrent = this;
-		if ( IsServer )
+		if ( Game.IsServer )
 		{
 			DataHandler = new DataHandler();
 
@@ -46,7 +46,7 @@ public partial class frpGame : GameManager
 	/// <summary>
 	/// A client has joined the server. Make them a pawn to play with
 	/// </summary>
-	public override void ClientJoined( Client cl )
+	public override void ClientJoined( IClient cl )
 	{
 		base.ClientJoined( cl );
 		var player = new Player( cl );
